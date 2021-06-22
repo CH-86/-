@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "kd/vr+CB3aDiecur4TKrZzgprbLPoOWLYnZucYPKu63PcTDQqWq31fxyoCE8y+TC0zE0xlv3xe6U4dcyUTA6kA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\1\\Downloads\\plzoofs\\microc\\interpc.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\1\\.nuget\\packages\\fsharp.core\\5.0.0\\fsharp.core.5.0.0.nupkg.sha512",
+    "C:\\Users\\1\\.nuget\\packages\\fslexyacc\\10.2.0\\fslexyacc.10.2.0.nupkg.sha512",
+    "C:\\Users\\1\\.nuget\\packages\\fslexyacc.runtime\\10.2.0\\fslexyacc.runtime.10.2.0.nupkg.sha512"
+  ],
+  "logs": []
+}
