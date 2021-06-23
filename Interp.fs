@@ -240,6 +240,33 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
             exec stmt1 locEnv gloEnv store1 //True分支
         else
             exec stmt2 locEnv gloEnv store1 //False分支
+    
+    | Dowhile (body, e) ->
+        // 先做一次DO 
+        let store = exec body locEnv gloEnv store
+        //定义 While循环辅助函数 loop
+        let rec loop store1 =
+            
+            //求值 循环条件,注意变更环境 store
+            let (v, store2) = eval e locEnv gloEnv store1
+            // 继续循环
+            if v <> 0 then
+                loop (exec body locEnv gloEnv store2)
+            else
+                store2 //退出循环返回 环境store2
+
+        loop store 
+
+    // 类似 Dowhile
+    | Dountil (body, e) -> 
+        let store = exec body locEnv gloEnv store
+        let rec loop store1 =
+            let (v, store2) = eval e locEnv gloEnv store1
+            if v = 0 then
+                loop (exec body locEnv gloEnv store2)
+            else
+                store2
+        loop store       
 
     | While (e, body) ->
 
@@ -255,19 +282,31 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
 
         loop store
 
-    | For (e, body) ->
-
-        //定义 For循环辅助函数 loop
+    | For (e1, e2, e3, body) ->
+        // _ 表示丢弃e的值,返回 变更后的环境store1
+        let (_, store0) = eval e1 locEnv gloEnv store
         let rec loop store1 =
-            //求值 循环条件,注意变更环境 store
-            let (v, store2) = eval e locEnv gloEnv store1
+            //求值 循环条件,注意变更环境 store2
+            let (v, store2) = eval e2 locEnv gloEnv store1
             // 继续循环
             if v <> 0 then
-                loop (exec body locEnv gloEnv store2)
-            else
-                store2 //退出循环返回 环境store2
+                // 注意变更环境 store3,  e2求值返回给store2
+                let (_, store3) = eval e3 locEnv gloEnv (exec body locEnv gloEnv store2)
+                loop store3
+            else store2 //退出循环返回 环境store2
+        loop store0
 
-        loop store    
+    | Forinrange (i, i1, i2, body) ->
+        let mutable i = i1
+
+        let rec loop store1 = 
+            if i < i2 then
+                i <- i + 1
+                
+                loop (exec body locEnv gloEnv store1)
+            else
+                store1     
+        loop store
 
     | Expr e ->
         // _ 表示丢弃e的值,返回 变更后的环境store1

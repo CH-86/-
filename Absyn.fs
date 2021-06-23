@@ -38,7 +38,12 @@ and stmt =
   | Expr of expr                     (* Expression statement   e;   *)
   | Return of expr option            (* Return from method          *)
   | Block of stmtordec list          (* Block: grouping and scope   *)
-  | For of  expr * stmt 
+  | For of expr * expr * expr * stmt
+  | Forinrange of int * int * int * stmt
+  | Dowhile of stmt * expr 
+  | Dountil of stmt * expr 
+
+  // | For of  
   // 语句块内部，可以是变量声明 或语句的列表                                                              
 
 and stmtordec =                                                    
