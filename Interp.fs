@@ -281,6 +281,18 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
                 store2 //退出循环返回 环境store2
 
         loop store
+    
+    | Switch (e, body) ->
+        let (e0, store) = eval e locEnv gloEnv store
+        let rec loop store body = 
+            match body with
+                | Default(body1)  ->   exec body1 locEnv gloEnv store
+                | Case(e1,body1,body2) -> 
+                    let (e2, store) = eval e1 locEnv gloEnv store
+                    if e0 = e2 then exec body1 locEnv gloEnv store
+                    else loop store body2
+                | _ -> store    
+        loop store body
 
     | For (e1, e2, e3, body) ->
         // _ 表示丢弃e的值,返回 变更后的环境store1
@@ -297,16 +309,14 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
         loop store0
 
     | Forinrange (i, i1, i2, body) ->
-        let mutable i = i1
-
-        let rec loop store1 = 
+        let (loc, store) =  access i locEnv gloEnv store
+        let rec loop store1 i = 
             if i < i2 then
-                i <- i + 1
-                
-                loop (exec body locEnv gloEnv store1)
+                let store2 = setSto store1 loc i
+                loop (exec body locEnv gloEnv store2) (i+1)
             else
                 store1     
-        loop store
+        loop store i1
 
     | Expr e ->
         // _ 表示丢弃e的值,返回 变更后的环境store1
@@ -325,7 +335,8 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
 
         loop stmts (locEnv, store)
 
-    | Return _ -> failwith "return not implemented" // 解释器没有实现 return
+    | Return _ -> failwith "return not implemented"
+    | Switch(_, _) -> failwith "Not Implemented" // 解释器没有实现 return
 
 and stmtordec stmtordec locEnv gloEnv store =
     match stmtordec with
@@ -343,6 +354,23 @@ and eval e locEnv gloEnv store : int * store =
         let (loc, store1) = access acc locEnv gloEnv store
         let (res, store2) = eval e locEnv gloEnv store1
         (res, setSto store2 loc res)
+
+    | Opeassign (ope, acc, e) ->
+        // 取acc值
+        let (loc, store1) = access acc locEnv gloEnv store
+        let v = getSto store1 loc 
+
+        let (r, _) = eval e locEnv gloEnv store
+
+        let res =
+            match ope with
+                | "+=" ->  v + r
+                | "-=" ->  v - r
+                | "*=" ->  v * r
+                | "/=" ->  v / r
+                |  _ -> failwith ("unknown primitive " + ope)
+        (res,(setSto store1 loc res))
+
     | CstI i -> (i, store)
     | Addr acc -> access acc locEnv gloEnv store
     | Prim1 (ope, e1) ->
@@ -378,8 +406,17 @@ and eval e locEnv gloEnv store : int * store =
             | ">=" -> if i1 >= i2 then 1 else 0
             | ">" -> if i1 > i2 then 1 else 0
             | _ -> failwith ("unknown primitive " + ope)
-
+            
         (res, store2)
+    | Prim3 (e1, e2, e3) ->
+        let (v1, _) = eval e1 locEnv gloEnv store
+        let (v2, store2) = eval e2 locEnv gloEnv store
+        let (v3, store3) = eval e3 locEnv gloEnv store
+        
+        if v1 <> 0 then (v2, store2)
+        else (v3, store3)
+
+
     | Andalso (e1, e2) ->
         let (i1, store1) as res = eval e1 locEnv gloEnv store
 

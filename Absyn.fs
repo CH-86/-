@@ -23,6 +23,8 @@ and expr =                           // 表达式，右值
   | CstI of int                      (* Constant                    *)
   | Prim1 of string * expr           (* Unary primitive operator    *)
   | Prim2 of string * expr * expr    (* Binary primitive operator   *)
+  | Prim3 of expr * expr * expr
+  | Opeassign of string * access * expr 
   | Andalso of expr * expr           (* Sequential and              *)
   | Orelse of expr * expr            (* Sequential or               *)
   | Call of string * expr list       (* Function call f(...)        *)
@@ -39,9 +41,12 @@ and stmt =
   | Return of expr option            (* Return from method          *)
   | Block of stmtordec list          (* Block: grouping and scope   *)
   | For of expr * expr * expr * stmt
-  | Forinrange of int * int * int * stmt
+  | Forinrange of access * int * int * stmt
   | Dowhile of stmt * expr 
   | Dountil of stmt * expr 
+  | Switch of expr * stmt
+  | Case of expr *stmt * stmt
+  | Default of stmt
 
   // | For of  
   // 语句块内部，可以是变量声明 或语句的列表                                                              

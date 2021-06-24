@@ -15,6 +15,8 @@ type token =
   | NOT
   | SEQOR
   | SEQAND
+  | QUESTION
+  | COLON
   | EQ
   | NE
   | GT
@@ -45,6 +47,7 @@ type token =
   | SWITCH
   | CASE
   | RANGE
+  | DEFAULT
   | CSTSTRING of (string)
   | NAME of (string)
   | CSTINT of (int)
@@ -64,6 +67,8 @@ type tokenId =
     | TOKEN_NOT
     | TOKEN_SEQOR
     | TOKEN_SEQAND
+    | TOKEN_QUESTION
+    | TOKEN_COLON
     | TOKEN_EQ
     | TOKEN_NE
     | TOKEN_GT
@@ -94,6 +99,7 @@ type tokenId =
     | TOKEN_SWITCH
     | TOKEN_CASE
     | TOKEN_RANGE
+    | TOKEN_DEFAULT
     | TOKEN_CSTSTRING
     | TOKEN_NAME
     | TOKEN_CSTINT
@@ -123,6 +129,7 @@ type nonTerminalId =
     | NONTERM_Exprs1
     | NONTERM_Const
     | NONTERM_Type
+    | NONTERM_StmtS
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 
