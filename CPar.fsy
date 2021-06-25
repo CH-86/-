@@ -15,26 +15,29 @@ let nl = CstI 10 //  \n 的 ASCII 码
 %}
 
 %token <int> CSTINT CSTBOOL  // <int> 是词元的语义值类型
-%token <char> CSTCHAR 
+%token <char> CSTCHAR
 %token <string> CSTSTRING NAME
 
-%token CHAR ELSE IF INT NULL PRINT PRINTLN RETURN VOID WHILE FOR IN DO DOUNTIL DOWHILE UNTIL SWITCH CASE RANGE DEFAULT
-%token PLUS MINUS TIMES DIV MOD 
+%token CHAR ELSE IF INT NULL PRINT PRINTLN RETURN VOID  RANGE DEFAULT CONTINUE EXIT PASS
+%token WHILE FOR IN DO DOUNTIL DOWHILE UNTIL SWITCH CASE LEN
+%token POW PLUS MINUS TIMES DIV MOD ONEPLUS ONEMINUS
 %token EQ NE GT LT GE LE
 %token QUESTION COLON
 %token NOT SEQOR SEQAND
-%token LPAR RPAR LBRACE RBRACE LBRACK RBRACK SEMI COMMA ASSIGN AMP
+%token LPAR RPAR LBRACE RBRACE LBRACK RBRACK SEMI COMMA ASSIGN AMP PLUSASSIGN MINUSASSIGN TIMESASSIGN DIVASSIGN
 %token EOF
 
-%right ASSIGN             /* lowest precedence */  // 最下面的优先级最高
+/* lowest precedence */  // 最下面的优先级最高
+%right ASSIGN PLUSASSIGN MINUSASSIGN TIMESASSIGN DIVASSIGN            
 %nonassoc PRINT
 %left SEQOR
 %left SEQAND
 %left EQ NE 
 %left QUESTION COLON
 %nonassoc GT LT GE LE
-%left PLUS MINUS
+%left PLUS MINUS PLUSONE
 %left TIMES DIV MOD 
+%left POW LEN
 %nonassoc NOT AMP 
 %nonassoc LBRACK          /* highest precedence  */
 
@@ -133,7 +136,9 @@ Stmt:
 ;
 
 StmtM:  /* No unbalanced if-else */
-    Expr SEMI                           { Expr($1)             }
+    PASS                                { Pass                 }
+  | LEN LPAR Vardesc RPAR               { Len($3)              }
+  | Expr SEMI                           { Expr($1)             }  
   | RETURN SEMI                         { Return None          }
   | RETURN Expr SEMI                    { Return(Some($2))     }
   | Block                               { $1                   }
@@ -161,14 +166,18 @@ ExprNotAccess:
     AtExprNotAccess                     { $1                  }
   | Access ASSIGN Expr                  { Assign($1, $3)      } // $1为左值
   | NAME LPAR Exprs RPAR                { Call($1, $3)        }  
+  | ONEPLUS Access                      { Prim0("++", $2)     } //++i
+  | ONEMINUS Access                     { Prim0("--", $2)     } //--i
   | NOT Expr                            { Prim1("!", $2)      }
   | PRINT Expr                          { Prim1("printi", $2) }
-//  | PRINT CSTSTRING                     { Prim1("prints", $2) }
+//  | PRINT CSTSTRING                     { Prim1("prints", $2) }     
   | PRINTLN                             { Prim1("printc", nl) }
-  | Access PLUS ASSIGN Expr             { Opeassign("+=", $1, $4) }
-  | Access MINUS ASSIGN Expr            { Opeassign("-=", $1, $4) }
-  | Access TIMES ASSIGN Expr            { Opeassign("*=", $1, $4) }
-  | Access DIV ASSIGN Expr              { Opeassign("/=", $1, $4) }
+  | PRINTLN Expr                        { Prim1("println", $2) }
+  | Access PLUSASSIGN Expr              { Opeassign($1, "+=", $3) }
+  | Access MINUSASSIGN Expr             { Opeassign($1, "-=", $3) }
+  | Access TIMESASSIGN Expr             { Opeassign($1, "*=", $3) }
+  | Access DIVASSIGN Expr               { Opeassign($1, "/=", $3) }
+  | Expr POW   Expr                     { Prim2("**",  $1, $3) }
   | Expr PLUS  Expr                     { Prim2("+",  $1, $3) }
   | Expr MINUS Expr                     { Prim2("-",  $1, $3) }
   | Expr TIMES Expr                     { Prim2("*",  $1, $3) }
@@ -218,12 +227,12 @@ Const:
   | CSTBOOL                             { $1       }
   | MINUS CSTINT                        { - $2     }
   | NULL                                { -1       }
-  | CSTCHAR                             { $1       }
+//  | CSTCHAR                             { $1       }
 ;
 
 Type:
     INT                                 { TypI     }
-  | CHAR                                { TypC     }
+//  | CHAR                                { TypC     }
 ;
 
 // SWITCH 语句块

@@ -12,6 +12,10 @@ type token =
   | COMMA
   | ASSIGN
   | AMP
+  | PLUSASSIGN
+  | MINUSASSIGN
+  | TIMESASSIGN
+  | DIVASSIGN
   | NOT
   | SEQOR
   | SEQAND
@@ -23,20 +27,14 @@ type token =
   | LT
   | GE
   | LE
+  | POW
   | PLUS
   | MINUS
   | TIMES
   | DIV
   | MOD
-  | CHAR
-  | ELSE
-  | IF
-  | INT
-  | NULL
-  | PRINT
-  | PRINTLN
-  | RETURN
-  | VOID
+  | ONEPLUS
+  | ONEMINUS
   | WHILE
   | FOR
   | IN
@@ -46,10 +44,24 @@ type token =
   | UNTIL
   | SWITCH
   | CASE
+  | LEN
+  | CHAR
+  | ELSE
+  | IF
+  | INT
+  | NULL
+  | PRINT
+  | PRINTLN
+  | RETURN
+  | VOID
   | RANGE
   | DEFAULT
+  | CONTINUE
+  | EXIT
+  | PASS
   | CSTSTRING of (string)
   | NAME of (string)
+  | CSTCHAR of (char)
   | CSTINT of (int)
   | CSTBOOL of (int)
 type tokenId = 
@@ -64,6 +76,10 @@ type tokenId =
     | TOKEN_COMMA
     | TOKEN_ASSIGN
     | TOKEN_AMP
+    | TOKEN_PLUSASSIGN
+    | TOKEN_MINUSASSIGN
+    | TOKEN_TIMESASSIGN
+    | TOKEN_DIVASSIGN
     | TOKEN_NOT
     | TOKEN_SEQOR
     | TOKEN_SEQAND
@@ -75,20 +91,14 @@ type tokenId =
     | TOKEN_LT
     | TOKEN_GE
     | TOKEN_LE
+    | TOKEN_POW
     | TOKEN_PLUS
     | TOKEN_MINUS
     | TOKEN_TIMES
     | TOKEN_DIV
     | TOKEN_MOD
-    | TOKEN_CHAR
-    | TOKEN_ELSE
-    | TOKEN_IF
-    | TOKEN_INT
-    | TOKEN_NULL
-    | TOKEN_PRINT
-    | TOKEN_PRINTLN
-    | TOKEN_RETURN
-    | TOKEN_VOID
+    | TOKEN_ONEPLUS
+    | TOKEN_ONEMINUS
     | TOKEN_WHILE
     | TOKEN_FOR
     | TOKEN_IN
@@ -98,10 +108,24 @@ type tokenId =
     | TOKEN_UNTIL
     | TOKEN_SWITCH
     | TOKEN_CASE
+    | TOKEN_LEN
+    | TOKEN_CHAR
+    | TOKEN_ELSE
+    | TOKEN_IF
+    | TOKEN_INT
+    | TOKEN_NULL
+    | TOKEN_PRINT
+    | TOKEN_PRINTLN
+    | TOKEN_RETURN
+    | TOKEN_VOID
     | TOKEN_RANGE
     | TOKEN_DEFAULT
+    | TOKEN_CONTINUE
+    | TOKEN_EXIT
+    | TOKEN_PASS
     | TOKEN_CSTSTRING
     | TOKEN_NAME
+    | TOKEN_CSTCHAR
     | TOKEN_CSTINT
     | TOKEN_CSTBOOL
     | TOKEN_end_of_input

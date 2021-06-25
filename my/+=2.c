@@ -3,9 +3,9 @@ int main(int n) {
     i = n ;
     print i += 2;
     i = n ;
-    print n -= 2;
+    print i -= 2;
     i = n ;
-    print n *= 2;
+    print i *= 2;
     i = n ;
-    print n /= 2;
+    print i /= 2;
 }

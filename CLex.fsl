@@ -33,6 +33,10 @@ let keyword s =
     | "in"      -> IN
     | "do"      -> DO
     | "dountil" -> DOUNTIL
+    | "continue"-> CONTINUE
+    | "exit"    -> EXIT
+    | "pass"    -> PASS
+    | "len"     -> LEN
     | "until"   -> UNTIL
     | "switch"  -> SWITCH
     | "case"    -> CASE
@@ -81,16 +85,23 @@ rule Token = parse          // 每个 规则rule 会生成为一个函数，函�
   | '/'             { DIV } 
   | '%'             { MOD }                     
   | '='             { ASSIGN }
-  | "=="            { EQ } 
+  | "=="            { EQ }
   | "!="            { NE }
   | '>'             { GT }
   | '<'             { LT }
   | ">="            { GE }
   | "<="            { LE }
+  | "++"            { ONEPLUS }
+  | "--"            { ONEMINUS }
+  | "+="            { PLUSASSIGN }
+  | "-="            { MINUSASSIGN }
+  | "*="            { TIMESASSIGN }
+  | "/="            { DIVASSIGN }
   | "||"            { SEQOR }                     
   | "&&"            { SEQAND }                     
   | "&"             { AMP }                     
-  | "!"             { NOT }                     
+  | "!"             { NOT }
+  | "**"            { POW }                     
   | '('             { LPAR }
   | ')'             { RPAR }
   | '{'             { LBRACE }

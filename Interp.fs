@@ -233,13 +233,13 @@ let initEnvAndStore (topdecs: topdec list) : locEnv * funEnv * store =
 
 let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
     match stmt with
+    | Pass -> store
     | If (e, stmt1, stmt2) ->
         let (v, store1) = eval e locEnv gloEnv store
-
         if v <> 0 then
-            exec stmt1 locEnv gloEnv store1 //True分支
+             exec stmt1 locEnv gloEnv store1 //True分支
         else
-            exec stmt2 locEnv gloEnv store1 //False分支
+             exec stmt2 locEnv gloEnv store1 //False分支
     
     | Dowhile (body, e) ->
         // 先做一次DO 
@@ -324,7 +324,6 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
         store1
 
     | Block stmts ->
-
         // 语句块 解释辅助函数 loop
         let rec loop ss (locEnv, store) =
             match ss with
@@ -334,9 +333,24 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
             | s1 :: sr -> loop sr (stmtordec s1 locEnv gloEnv store)
 
         loop stmts (locEnv, store)
+    // | Len e ->
+    //      let i = 1
+    //      i
+        //match array with
 
-    | Return _ -> failwith "return not implemented"
-    | Switch(_, _) -> failwith "Not Implemented" // 解释器没有实现 return
+    // let rec allocate (typ, x) (env0, nextloc) sto0 : locEnv * store =
+
+    // let (nextloc1, v, sto1) =
+    //     match typ with
+    //     //数组 调用 initSto 分配 i 个空间
+    //     | TypA (t, Some i) -> (nextloc + i, nextloc, initSto nextloc i sto0)
+    //     // 常规变量默认值是 0
+    //     | _ -> (nextloc, 0, sto0)
+
+    // msg $"\nalloc:\n {((typ, x), (env0, nextloc), sto0)}"
+    // bindVar x v (env0, nextloc1) sto1
+
+    | Return _ -> failwith "return not implemented"  // 解释器没有实现 return
 
 and stmtordec stmtordec locEnv gloEnv store =
     match stmtordec with
@@ -355,7 +369,7 @@ and eval e locEnv gloEnv store : int * store =
         let (res, store2) = eval e locEnv gloEnv store1
         (res, setSto store2 loc res)
 
-    | Opeassign (ope, acc, e) ->
+    | Opeassign (acc, ope, e) ->
         // 取acc值
         let (loc, store1) = access acc locEnv gloEnv store
         let v = getSto store1 loc 
@@ -363,18 +377,34 @@ and eval e locEnv gloEnv store : int * store =
         let (r, _) = eval e locEnv gloEnv store
 
         let res =
-            match ope with
-                | "+=" ->  v + r
-                | "-=" ->  v - r
-                | "*=" ->  v * r
-                | "/=" ->  v / r
-                |  _ -> failwith ("unknown primitive " + ope)
+                    match ope with
+                        | "+=" ->  v + r
+                        | "-=" ->  v - r
+                        | "*=" ->  v * r
+                        | "/=" ->  v / r
+                        |  _ -> failwith ("unknown primitive " + ope)    
         (res,(setSto store1 loc res))
 
     | CstI i -> (i, store)
     | Addr acc -> access acc locEnv gloEnv store
+
+    | Prim0 (ope, acc) ->
+        // 取acc值
+        let (loc, store1) = access acc locEnv gloEnv store
+        let v = getSto store1 loc 
+
+        let res = 
+            match ope with
+                | "++" -> v+1
+                | "--" -> v-1
+                |   _ -> failwith ("unknown primitive " + ope)
+
+        (res,(setSto store1 loc res))
+
     | Prim1 (ope, e1) ->
         let (i1, store1) = eval e1 locEnv gloEnv store
+
+        let i1tp = i1.GetType
 
         let res =
             match ope with
@@ -382,8 +412,16 @@ and eval e locEnv gloEnv store : int * store =
             | "printi" ->
                 (printf "%d " i1
                  i1)
+            | "println" ->
+                (printfn "%d" i1
+                 i1)   
+            | "prints" ->
+                (printf "%s " (string i1)
+                 i1)
+                                  
             | "printc" ->
-                (printf "%c" (char i1)
+                (printf "\n"
+                    //printf "%c\n" (char i1)
                  i1)
             | _ -> failwith ("unknown primitive " + ope)
 
@@ -405,6 +443,16 @@ and eval e locEnv gloEnv store : int * store =
             | "<=" -> if i1 <= i2 then 1 else 0
             | ">=" -> if i1 >= i2 then 1 else 0
             | ">" -> if i1 > i2 then 1 else 0
+            | "**" -> 
+                if i1 = 0 then 0
+                else if i2 = 0 then 1
+                else (
+                    let rec loop  x y =
+                        if y = 1 then x
+                        else loop (x*i1) (y-1)
+                    loop i1 i2
+                )
+                
             | _ -> failwith ("unknown primitive " + ope)
             
         (res, store2)

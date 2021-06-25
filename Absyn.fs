@@ -21,13 +21,16 @@ and expr =                           // 表达式，右值
   | Assign of access * expr          (* x=e  or  *p=e  or  a[e]=e   *)
   | Addr of access                   (* &x   or  &*p   or  &a[e]    *)
   | CstI of int                      (* Constant                    *)
+  | Prim0 of string * access
   | Prim1 of string * expr           (* Unary primitive operator    *)
   | Prim2 of string * expr * expr    (* Binary primitive operator   *)
   | Prim3 of expr * expr * expr
-  | Opeassign of string * access * expr 
+  | Opeassign of access * string * expr 
   | Andalso of expr * expr           (* Sequential and              *)
   | Orelse of expr * expr            (* Sequential or               *)
   | Call of string * expr list       (* Function call f(...)        *)
+  | Len of typ
+
                                                                    
 and access =                         //左值，存储的位置                                            
   | AccVar of string                 (* Variable access        x    *) 
@@ -47,6 +50,8 @@ and stmt =
   | Switch of expr * stmt
   | Case of expr *stmt * stmt
   | Default of stmt
+  | Pass
+
 
   // | For of  
   // 语句块内部，可以是变量声明 或语句的列表                                                              
