@@ -30,7 +30,7 @@ type instr =
   | DUP                                (* duplicate stack top             *)
   | SWAP                               (* swap s[sp-1] and s[sp]          *)
   | LDI                                (* get s[s[sp]]                    *)
-  | STI                                (* set s[s[sp-1]]                  *)
+  | STI                                (* set s[s[sp-1]] = s[sp]          *)
   | GETBP                              (* get bp                          *)
   | GETSP                              (* get sp                          *)
   | INCSP of int                       (* increase stack top by m         *)

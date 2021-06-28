@@ -186,25 +186,48 @@ let makeGlobalEnvs(topdecs : topdec list) : VarEnv * FunEnv * instr list =
 let rec cStmt stmt (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : instr list = 
     match stmt with
     | If(e, stmt1, stmt2) -> 
-      let (jumpend, C1) = makeJump C
-      let (labelse, C2) = addLabel (cStmt stmt2 varEnv funEnv C1)
-      cExpr e varEnv funEnv (IFZERO labelse 
-       :: cStmt stmt1 varEnv funEnv (addJump jumpend C2))
+      let (jumpend, C1) = makeJump C // if结束
+      let (labelse, C2) = addLabel (cStmt stmt2 varEnv funEnv C1) // else结束 返回 labelse
+      cExpr e varEnv funEnv (IFZERO labelse // e求值 结果为0 使用stmt2的
+       :: cStmt stmt1 varEnv funEnv (addJump jumpend C2)) // 结果非0 使用stmt1求值
+
+    // | Forinrange(acc, e1, e2, body) ->
+    //   // 参考 = 
+    //   let C = cAccess acc varEnv funEnv (cExpr e1 varEnv funEnv (STI :: C))
+    //   let labbegin = newLabel()
+    //   // 参考while逻辑
+    //   let (jumptest, C1) = 
+    //        makeJump (cExpr e2 varEnv funEnv (IFNZRO labbegin :: C)) 
+    //   addJump jumptest (Label labbegin :: cStmt body varEnv funEnv (cAccess acc varEnv funEnv (GETBP :: LDI :: addCST 1 ( ADD :: STI :: C1))))
+    //   // 参考++i  e2是值行语句
+    // expr int 类型不匹配
+
+    // | For(e1, e2, e3, body) ->
+    //     let C1 = cExpr e1 varEnv funEnv C
+    //     let labbegin = newLabel()
+    //     let (jumptest, C1) = 
+    //          makeJump (cExpr e2 varEnv funEnv (IFNZRO labbegin :: (cExpr e3 varEnv funEnv C1)))
+    //     addJump jumptest (Label labbegin :: cStmt body varEnv funEnv C1)
+
+      // cAccess acc varEnv funEnv 
+      //   (GETBP :: LDI :: 
+      //     (cExpr e2 varEnv funEnv 
+      //       (ADD :: STI :: C)
+      //     )
+      //   )
     | While(e, body) ->
       let labbegin = newLabel()
       let (jumptest, C1) = 
-           makeJump (cExpr e varEnv funEnv (IFNZRO labbegin :: C))
-      addJump jumptest (Label labbegin :: cStmt body varEnv funEnv C1)
+           makeJump (cExpr e varEnv funEnv (IFNZRO labbegin :: C)) // e求值不为0 BODY
+      addJump jumptest (Label labbegin :: cStmt body varEnv funEnv C1) // 退出
 
     | Dowhile(body, e) ->
-        let labbegin = newLabel()
-        let C1 = cExpr e varEnv funEnv  (IFNZRO labbegin :: C)
-        Label labbegin :: cStmt body varEnv funEnv  C1
+      let labbegin = newLabel()
+      Label labbegin :: cStmt body varEnv funEnv (cExpr e varEnv funEnv (IFNZRO labbegin ::C))
 
     | Dountil(body, e) ->
         let labbegin = newLabel()
-        let C1 = cExpr e varEnv funEnv  (IFZERO labbegin :: C)
-        Label labbegin :: cStmt body varEnv funEnv  C1
+        Label labbegin :: cStmt body varEnv funEnv (cExpr e varEnv funEnv (IFZERO labbegin ::C))
 
     | Expr e -> 
       cExpr e varEnv funEnv (addINCSP -1 C) 
@@ -253,10 +276,33 @@ and bStmtordec stmtOrDec varEnv : bstmtordec * VarEnv =
 
 and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : instr list =
     match e with
-    | Access acc     -> cAccess acc varEnv funEnv (LDI :: C)
-    | Assign(acc, e) -> cAccess acc varEnv funEnv (cExpr e varEnv funEnv (STI :: C))
-    | CstI i         -> addCST i C
-    | Addr acc       -> cAccess acc varEnv funEnv C
+    | Access acc     -> cAccess acc varEnv funEnv (LDI :: C)    // 取值入栈
+    | Assign(acc, e) -> cAccess acc varEnv funEnv (cExpr e varEnv funEnv (STI :: C))    // 取值后赋值
+    | CstI i         -> addCST i C  // 常数
+    | Addr acc       -> cAccess acc varEnv funEnv C // 取地址
+    
+    | Opeassign (acc, ope, e) -> 
+        cAccess acc varEnv funEnv (GETBP :: LDI ::
+          (cExpr e varEnv funEnv
+            (match ope with
+              | "+=" ->  ADD :: STI :: C
+              | "-=" ->  SUB :: STI :: C
+              | "*=" ->  MUL :: STI :: C
+              | "/=" ->  DIV :: STI :: C
+              | _ -> failwith "unknown opeassign"
+            )
+          )
+        )
+
+    | Prim0(ope, acc) ->
+      cAccess acc varEnv funEnv (GETBP :: LDI :: addCST 1 
+          (match ope with
+            | "++" -> ADD :: STI :: C
+            | "--" -> SUB :: STI :: C
+            | _ -> failwith "unknown primitive 0"
+          )
+      )
+
     | Prim1(ope, e1) ->
       cExpr e1 varEnv funEnv
           (match ope with
@@ -280,6 +326,12 @@ and cExpr (e : expr) (varEnv : VarEnv) (funEnv : FunEnv) (C : instr list) : inst
             | ">"   -> SWAP :: LT :: C
             | "<="  -> SWAP :: LT :: addNOT C
             | _     -> failwith "unknown primitive 2"))
+    | Prim3 (e1, e2, e3) ->
+      let (jumpend, C1) = makeJump C
+      let (labelse, C2) = addLabel (cExpr e3 varEnv funEnv C1) 
+      cExpr e1 varEnv funEnv (IFZERO labelse 
+       :: cExpr e2 varEnv funEnv (addJump jumpend C2))
+
     | Andalso(e1, e2) ->
       match C with
       | IFZERO lab :: _ ->

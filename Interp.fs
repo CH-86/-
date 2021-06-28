@@ -308,8 +308,8 @@ let rec exec stmt (locEnv: locEnv) (gloEnv: gloEnv) (store: store) : store =
             else store2 //退出循环返回 环境store2
         loop store0
 
-    | Forinrange (i, i1, i2, body) ->
-        let (loc, store) =  access i locEnv gloEnv store
+    | Forinrange (acc, i1, i2, body) ->
+        let (loc, store) =  access acc locEnv gloEnv store
         let rec loop store1 i = 
             if i < i2 then
                 let store2 = setSto store1 loc i
@@ -362,9 +362,11 @@ and stmtordec stmtordec locEnv gloEnv store =
 and eval e locEnv gloEnv store : int * store =
     match e with
     | Access acc ->
+        // 取值
         let (loc, store1) = access acc locEnv gloEnv store
         (getSto store1 loc, store1)
     | Assign (acc, e) ->
+        // 赋值
         let (loc, store1) = access acc locEnv gloEnv store
         let (res, store2) = eval e locEnv gloEnv store1
         (res, setSto store2 loc res)
