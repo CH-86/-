@@ -137,7 +137,7 @@ Stmt:
 
 StmtM:  /* No unbalanced if-else */
     PASS                                { Pass                 }
-  | LEN LPAR Vardesc RPAR               { Len($3)              }
+//  | LEN LPAR Vardesc RPAR               { Len($3)              }
   | Expr SEMI                           { Expr($1)             }  
   | RETURN SEMI                         { Return None          }
   | RETURN Expr SEMI                    { Return(Some($2))     }
